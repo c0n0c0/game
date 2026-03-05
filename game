@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>マウス操作ゲーム</title>
+<title>フタ＆チャックゲーム</title>
 
 <style>
 body{
@@ -22,29 +22,26 @@ h1{
 /* フタ */
 
 .gacha{
-    width:200px;
+    width:220px;
     margin:20px auto;
     position:relative;
 }
 
 .lid{
-    width:200px;
+    width:220px;
     height:60px;
     background:#ff6b6b;
     border-radius:10px 10px 0 0;
     position:absolute;
-    transform-origin:left;
-    transition:0.6s;
+    top:0;
+    left:0;
+    transform-origin:left bottom;
     cursor:pointer;
 }
 
-.lid.open{
-    transform:rotate(-120deg);
-}
-
 .box{
-    width:200px;
-    height:120px;
+    width:220px;
+    height:130px;
     background:#ffd43b;
     border-radius:0 0 10px 10px;
     margin-top:60px;
@@ -57,12 +54,21 @@ h1{
 /* チャック */
 
 .bag{
-    width:200px;
-    height:200px;
-    margin:20px auto;
+    width:220px;
+    height:220px;
     background:#74c0fc;
-    border-radius:10px;
+    border-radius:12px;
+    margin:20px auto;
     position:relative;
+}
+
+.zipline{
+    width:6px;
+    height:200px;
+    background:#495057;
+    position:absolute;
+    left:107px;
+    top:10px;
 }
 
 .slider{
@@ -71,32 +77,24 @@ h1{
     background:#343a40;
     border-radius:50%;
     position:absolute;
-    top:0;
-    left:80px;
+    left:90px;
+    top:10px;
     cursor:pointer;
 }
 
-.zipline{
-    width:4px;
-    height:200px;
-    background:#495057;
-    position:absolute;
-    left:98px;
-}
-
 .result{
-    margin-top:10px;
     font-size:22px;
+    margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🖱️ マウス操作ゲーム</h1>
+<h1>🖱️ フタ＆チャックゲーム</h1>
 
 <div class="area">
-<h2>フタをクリック</h2>
+<h2>フタをドラッグして開ける</h2>
 
 <div class="gacha">
 <div class="lid" id="lid"></div>
@@ -104,7 +102,6 @@ h1{
 </div>
 
 </div>
-
 
 <div class="area">
 <h2>チャックをドラッグ</h2>
@@ -115,7 +112,6 @@ h1{
 </div>
 
 <div class="result" id="zipResult">？</div>
-
 </div>
 
 <script>
@@ -124,39 +120,55 @@ const items=[
 "大当たり🎉",
 "レア⭐",
 "当たり",
-"普通",
-"はずれ"
+"普通🙂",
+"はずれ😢"
 ];
 
 function randomItem(){
 return items[Math.floor(Math.random()*items.length)];
 }
 
-/* フタクリック */
+/* フタドラッグ */
 
-let lidOpen=false;
+const lid=document.getElementById("lid");
+const lidResult=document.getElementById("lidResult");
 
-document.getElementById("lid").onclick=function(){
+let lidDragging=false;
 
-const lid=this;
-const result=document.getElementById("lidResult");
+lid.addEventListener("mousedown",()=>{
+lidDragging=true;
+});
 
-if(!lidOpen){
-lid.classList.add("open");
-result.textContent=randomItem();
-lidOpen=true;
-}else{
-lid.classList.remove("open");
-result.textContent="？";
-lidOpen=false;
+document.addEventListener("mouseup",()=>{
+lidDragging=false;
+});
+
+document.addEventListener("mousemove",(e)=>{
+
+if(!lidDragging)return;
+
+let gacha=document.querySelector(".gacha");
+let rect=gacha.getBoundingClientRect();
+
+let x=e.clientX-rect.left;
+
+let angle=x/220*120;
+
+if(angle>120)angle=120;
+if(angle<0)angle=0;
+
+lid.style.transform="rotate("+(-angle)+"deg)";
+
+if(angle>100){
+lidResult.textContent=randomItem();
 }
 
-}
+});
 
 /* チャックドラッグ */
 
 const slider=document.getElementById("slider");
-const result=document.getElementById("zipResult");
+const zipResult=document.getElementById("zipResult");
 
 let dragging=false;
 
@@ -170,20 +182,20 @@ dragging=false;
 
 document.addEventListener("mousemove",(e)=>{
 
-if(!dragging) return;
+if(!dragging)return;
 
 let bag=document.querySelector(".bag");
 let rect=bag.getBoundingClientRect();
 
-let y=e.clientY-rect.top;
+let y=e.clientY-rect.top-20;
 
-if(y<0)y=0;
-if(y>160)y=160;
+if(y<10)y=10;
+if(y>170)y=170;
 
 slider.style.top=y+"px";
 
-if(y>150){
-result.textContent=randomItem();
+if(y>160){
+zipResult.textContent=randomItem();
 }
 
 });

@@ -53,3 +53,142 @@ h1{
     justify-content:center;
     font-size:22px;
 }
+
+/* チャック */
+
+.bag{
+    width:200px;
+    height:200px;
+    margin:20px auto;
+    background:#74c0fc;
+    border-radius:10px;
+    position:relative;
+}
+
+.slider{
+    width:40px;
+    height:40px;
+    background:#343a40;
+    border-radius:50%;
+    position:absolute;
+    top:0;
+    left:80px;
+    cursor:pointer;
+}
+
+.zipline{
+    width:4px;
+    height:200px;
+    background:#495057;
+    position:absolute;
+    left:98px;
+}
+
+.result{
+    margin-top:10px;
+    font-size:22px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🖱️ マウス操作ゲーム</h1>
+
+<div class="area">
+<h2>フタをクリック</h2>
+
+<div class="gacha">
+<div class="lid" id="lid"></div>
+<div class="box" id="lidResult">？</div>
+</div>
+
+</div>
+
+
+<div class="area">
+<h2>チャックをドラッグ</h2>
+
+<div class="bag">
+<div class="zipline"></div>
+<div class="slider" id="slider"></div>
+</div>
+
+<div class="result" id="zipResult">？</div>
+
+</div>
+
+<script>
+
+const items=[
+"大当たり🎉",
+"レア⭐",
+"当たり",
+"普通",
+"はずれ"
+];
+
+function randomItem(){
+return items[Math.floor(Math.random()*items.length)];
+}
+
+/* フタクリック */
+
+let lidOpen=false;
+
+document.getElementById("lid").onclick=function(){
+
+const lid=this;
+const result=document.getElementById("lidResult");
+
+if(!lidOpen){
+lid.classList.add("open");
+result.textContent=randomItem();
+lidOpen=true;
+}else{
+lid.classList.remove("open");
+result.textContent="？";
+lidOpen=false;
+}
+
+}
+
+/* チャックドラッグ */
+
+const slider=document.getElementById("slider");
+const result=document.getElementById("zipResult");
+
+let dragging=false;
+
+slider.addEventListener("mousedown",()=>{
+dragging=true;
+});
+
+document.addEventListener("mouseup",()=>{
+dragging=false;
+});
+
+document.addEventListener("mousemove",(e)=>{
+
+if(!dragging) return;
+
+let bag=document.querySelector(".bag");
+let rect=bag.getBoundingClientRect();
+
+let y=e.clientY-rect.top;
+
+if(y<0)y=0;
+if(y>160)y=160;
+
+slider.style.top=y+"px";
+
+if(y>150){
+result.textContent=randomItem();
+}
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,100 +1,116 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>フタ＆チャックゲーム</title>
+<title>矢印キーゲーム</title>
 
 <style>
 body{
-    font-family:sans-serif;
-    text-align:center;
-    background:#eef7ff;
+font-family:sans-serif;
+text-align:center;
+background:#eef7ff;
 }
 
 h1{
-    margin-top:20px;
+margin-top:20px;
 }
 
 .area{
-    margin:40px auto;
+margin:40px auto;
 }
 
 /* フタ */
 
 .gacha{
-    width:220px;
-    margin:20px auto;
-    position:relative;
+width:220px;
+margin:20px auto;
+position:relative;
 }
 
 .lid{
-    width:220px;
-    height:60px;
-    background:#ff6b6b;
-    border-radius:10px 10px 0 0;
-    position:absolute;
-    top:0;
-    left:0;
-    transform-origin:left bottom;
-    cursor:pointer;
+width:220px;
+height:60px;
+background:#ff6b6b;
+border-radius:10px 10px 0 0;
+position:absolute;
+top:0;
+left:0;
+transform-origin:left bottom;
 }
 
 .box{
-    width:220px;
-    height:130px;
-    background:#ffd43b;
-    border-radius:0 0 10px 10px;
-    margin-top:60px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:22px;
+width:220px;
+height:130px;
+background:#ffd43b;
+border-radius:0 0 10px 10px;
+margin-top:60px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
 }
 
 /* チャック */
 
 .bag{
-    width:220px;
-    height:220px;
-    background:#74c0fc;
-    border-radius:12px;
-    margin:20px auto;
-    position:relative;
+width:220px;
+height:220px;
+background:#74c0fc;
+border-radius:12px;
+margin:20px auto;
+position:relative;
 }
 
-.zipline{
-    width:6px;
-    height:200px;
-    background:#495057;
-    position:absolute;
-    left:107px;
-    top:10px;
+.teeth{
+position:absolute;
+left:107px;
+top:10px;
+width:6px;
+height:200px;
+background:repeating-linear-gradient(
+to bottom,
+#495057 0px,
+#495057 6px,
+#adb5bd 6px,
+#adb5bd 12px
+);
+}
+
+.openArea{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:0;
+background:white;
 }
 
 .slider{
-    width:40px;
-    height:40px;
-    background:#343a40;
-    border-radius:50%;
-    position:absolute;
-    left:90px;
-    top:10px;
-    cursor:pointer;
+width:40px;
+height:40px;
+background:#343a40;
+border-radius:50%;
+position:absolute;
+left:90px;
+top:10px;
 }
 
 .result{
-    font-size:22px;
-    margin-top:10px;
+font-size:22px;
+margin-top:10px;
 }
 </style>
+
 </head>
 
 <body>
 
-<h1>🖱️ フタ＆チャックゲーム</h1>
+<h1>🎮 矢印キーゲーム</h1>
+<p>左右キー → フタ　／　上下キー → チャック</p>
 
 <div class="area">
-<h2>フタをドラッグして開ける</h2>
+<h2>フタ</h2>
 
 <div class="gacha">
 <div class="lid" id="lid"></div>
@@ -104,14 +120,16 @@ h1{
 </div>
 
 <div class="area">
-<h2>チャックをドラッグ</h2>
+<h2>チャック</h2>
 
 <div class="bag">
-<div class="zipline"></div>
+<div class="openArea" id="openArea"></div>
+<div class="teeth"></div>
 <div class="slider" id="slider"></div>
 </div>
 
 <div class="result" id="zipResult">？</div>
+
 </div>
 
 <script>
@@ -119,8 +137,8 @@ h1{
 const items=[
 "大当たり🎉",
 "レア⭐",
-"当たり",
-"普通🙂",
+"当たり🙂",
+"普通",
 "はずれ😢"
 ];
 
@@ -128,34 +146,33 @@ function randomItem(){
 return items[Math.floor(Math.random()*items.length)];
 }
 
-/* フタドラッグ */
+/* フタ */
 
+let angle=0;
 const lid=document.getElementById("lid");
 const lidResult=document.getElementById("lidResult");
 
-let lidDragging=false;
+/* チャック */
 
-lid.addEventListener("mousedown",()=>{
-lidDragging=true;
-});
+let zip=10;
+const slider=document.getElementById("slider");
+const openArea=document.getElementById("openArea");
+const zipResult=document.getElementById("zipResult");
 
-document.addEventListener("mouseup",()=>{
-lidDragging=false;
-});
+document.addEventListener("keydown",(e)=>{
 
-document.addEventListener("mousemove",(e)=>{
+/* フタ */
 
-if(!lidDragging)return;
+if(e.key==="ArrowRight"){
+angle+=10;
+}
 
-let gacha=document.querySelector(".gacha");
-let rect=gacha.getBoundingClientRect();
+if(e.key==="ArrowLeft"){
+angle-=10;
+}
 
-let x=e.clientX-rect.left;
-
-let angle=x/220*120;
-
-if(angle>120)angle=120;
 if(angle<0)angle=0;
+if(angle>120)angle=120;
 
 lid.style.transform="rotate("+(-angle)+"deg)";
 
@@ -163,38 +180,23 @@ if(angle>100){
 lidResult.textContent=randomItem();
 }
 
-});
+/* チャック */
 
-/* チャックドラッグ */
+if(e.key==="ArrowDown"){
+zip+=10;
+}
 
-const slider=document.getElementById("slider");
-const zipResult=document.getElementById("zipResult");
+if(e.key==="ArrowUp"){
+zip-=10;
+}
 
-let dragging=false;
+if(zip<10)zip=10;
+if(zip>170)zip=170;
 
-slider.addEventListener("mousedown",()=>{
-dragging=true;
-});
+slider.style.top=zip+"px";
+openArea.style.height=zip+"px";
 
-document.addEventListener("mouseup",()=>{
-dragging=false;
-});
-
-document.addEventListener("mousemove",(e)=>{
-
-if(!dragging)return;
-
-let bag=document.querySelector(".bag");
-let rect=bag.getBoundingClientRect();
-
-let y=e.clientY-rect.top-20;
-
-if(y<10)y=10;
-if(y>170)y=170;
-
-slider.style.top=y+"px";
-
-if(y>160){
+if(zip>160){
 zipResult.textContent=randomItem();
 }
 

@@ -1,208 +1,209 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>矢印キーゲーム</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リズム・タイミング・ゲーム</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --target-color: #e94560;
+            --ring-color: #0f3460;
+            --text-color: #ffffff;
+        }
 
-<style>
-body{
-font-family:sans-serif;
-text-align:center;
-background:#eef7ff;
-}
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            overflow: hidden;
+            user-select: none;
+        }
 
-h1{
-margin-top:20px;
-}
+        #game-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.area{
-margin:40px auto;
-}
+        /* ターゲット（中心のボタン） */
+        #target {
+            width: 80px;
+            height: 80px;
+            background-color: var(--target-color);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+            transition: transform 0.1s;
+        }
 
-/* フタ */
+        #target:active {
+            transform: scale(0.9);
+        }
 
-.gacha{
-width:220px;
-margin:20px auto;
-position:relative;
-}
+        /* 収束するリング */
+        .ring {
+            position: absolute;
+            border: 4px solid var(--text-color);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.6;
+        }
 
-.lid{
-width:220px;
-height:60px;
-background:#ff6b6b;
-border-radius:10px 10px 0 0;
-position:absolute;
-top:0;
-left:0;
-transform-origin:left bottom;
-}
+        /* スコアとメッセージ */
+        #ui {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-.box{
-width:220px;
-height:130px;
-background:#ffd43b;
-border-radius:0 0 10px 10px;
-margin-top:60px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:22px;
-}
+        #score {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+        }
 
-/* チャック */
+        #message {
+            height: 1.5rem;
+            font-size: 1.2rem;
+            color: #4ecca3;
+            margin-top: 10px;
+        }
 
-.bag{
-width:220px;
-height:220px;
-background:#74c0fc;
-border-radius:12px;
-margin:20px auto;
-position:relative;
-}
-
-.teeth{
-position:absolute;
-left:107px;
-top:10px;
-width:6px;
-height:200px;
-background:repeating-linear-gradient(
-to bottom,
-#495057 0px,
-#495057 6px,
-#adb5bd 6px,
-#adb5bd 12px
-);
-}
-
-.openArea{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:0;
-background:white;
-}
-
-.slider{
-width:40px;
-height:40px;
-background:#343a40;
-border-radius:50%;
-position:absolute;
-left:90px;
-top:10px;
-}
-
-.result{
-font-size:22px;
-margin-top:10px;
-}
-</style>
-
+        .instructions {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
 </head>
-
 <body>
 
-<h1>🎮 矢印キーゲーム</h1>
-<p>左右キー → フタ　／　上下キー → チャック</p>
+    <div id="ui">
+        <p id="score">Score: 0</p>
+        <div id="message">READY?</div>
+    </div>
 
-<div class="area">
-<h2>フタ</h2>
+    <div id="game-container">
+        <div id="target"></div>
+        </div>
 
-<div class="gacha">
-<div class="lid" id="lid"></div>
-<div class="box" id="lidResult">？</div>
-</div>
+    <div class="instructions">
+        白い輪っかが赤い円に重なる瞬間にクリック！
+    </div>
 
-</div>
+    <script>
+        const target = document.getElementById('target');
+        const scoreDisplay = document.getElementById('score');
+        const messageDisplay = document.getElementById('message');
+        const container = document.getElementById('game-container');
 
-<div class="area">
-<h2>チャック</h2>
+        let score = 0;
+        let activeRing = null;
+        let ringScale = 3.0; // リングの初期サイズ（3倍）
+        let gameLoop = null;
+        const shrinkSpeed = 0.025; // 輪っかが縮まる速度
 
-<div class="bag">
-<div class="openArea" id="openArea"></div>
-<div class="teeth"></div>
-<div class="slider" id="slider"></div>
-</div>
+        // ゲームループの開始
+        function startRing() {
+            ringScale = 3.0;
+            const ring = document.createElement('div');
+            ring.className = 'ring';
+            container.appendChild(ring);
+            activeRing = ring;
 
-<div class="result" id="zipResult">？</div>
+            function animate() {
+                if (!activeRing) return;
 
-</div>
+                ringScale -= shrinkSpeed;
+                
+                // リングのサイズ更新
+                const size = 80 * ringScale;
+                activeRing.style.width = size + 'px';
+                activeRing.style.height = size + 'px';
 
-<script>
+                // 見逃した場合
+                if (ringScale <= 0.5) {
+                    updateMessage("MISS...", "#e94560");
+                    resetRing();
+                    score = Math.max(0, score - 5);
+                    updateScore();
+                    setTimeout(startRing, 1000);
+                } else {
+                    gameLoop = requestAnimationFrame(animate);
+                }
+            }
+            gameLoop = requestAnimationFrame(animate);
+        }
 
-const items=[
-"大当たり🎉",
-"レア⭐",
-"当たり🙂",
-"普通",
-"はずれ😢"
-];
+        // 判定処理
+        function checkTiming() {
+            if (!activeRing) return;
 
-function randomItem(){
-return items[Math.floor(Math.random()*items.length)];
-}
+            cancelAnimationFrame(gameLoop);
+            
+            // 判定（1.0がジャストサイズ）
+            const diff = Math.abs(ringScale - 1.0);
+            
+            if (diff < 0.1) {
+                updateMessage("PERFECT!!", "#4ecca3");
+                score += 10;
+            } else if (diff < 0.25) {
+                updateMessage("GOOD", "#f7d794");
+                score += 5;
+            } else {
+                updateMessage("TOO EARLY", "#636e72");
+                score = Math.max(0, score - 2);
+            }
 
-/* フタ */
+            updateScore();
+            resetRing();
+            
+            // 次のリングまで少し待機
+            setTimeout(startRing, 800);
+        }
 
-let angle=0;
-const lid=document.getElementById("lid");
-const lidResult=document.getElementById("lidResult");
+        function resetRing() {
+            if (activeRing) {
+                activeRing.remove();
+                activeRing = null;
+            }
+        }
 
-/* チャック */
+        function updateScore() {
+            scoreDisplay.innerText = `Score: ${score}`;
+        }
 
-let zip=10;
-const slider=document.getElementById("slider");
-const openArea=document.getElementById("openArea");
-const zipResult=document.getElementById("zipResult");
+        function updateMessage(text, color) {
+            messageDisplay.innerText = text;
+            messageDisplay.style.color = color;
+        }
 
-document.addEventListener("keydown",(e)=>{
+        // イベントリスナー
+        target.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            checkTiming();
+        });
 
-/* フタ */
+        // スペースキーでも操作可能に
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                checkTiming();
+            }
+        });
 
-if(e.key==="ArrowRight"){
-angle+=10;
-}
-
-if(e.key==="ArrowLeft"){
-angle-=10;
-}
-
-if(angle<0)angle=0;
-if(angle>120)angle=120;
-
-lid.style.transform="rotate("+(-angle)+"deg)";
-
-if(angle>100){
-lidResult.textContent=randomItem();
-}
-
-/* チャック */
-
-if(e.key==="ArrowDown"){
-zip+=10;
-}
-
-if(e.key==="ArrowUp"){
-zip-=10;
-}
-
-if(zip<10)zip=10;
-if(zip>170)zip=170;
-
-slider.style.top=zip+"px";
-openArea.style.height=zip+"px";
-
-if(zip>160){
-zipResult.textContent=randomItem();
-}
-
-});
-
-</script>
-
+        // 起動
+        setTimeout(startRing, 1000);
+    </script>
 </body>
 </html>
